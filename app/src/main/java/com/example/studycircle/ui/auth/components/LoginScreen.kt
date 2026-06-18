@@ -21,12 +21,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import android.widget.Toast
 import com.example.studycircle.R
 import com.example.studycircle.ui.auth.components.AuthTextField
 import com.example.studycircle.ui.auth.components.GradientButton
@@ -36,16 +39,35 @@ import com.example.studycircle.ui.theme.TextSecondary
 
 @Composable
 fun LoginScreen(
-    onLoginClick: (email: String, password: String) -> Unit = { _, _ -> },
+    authViewModel: AuthViewModel = viewModel(),
+    onLoginSuccess: () -> Unit = {},
     onNavigateToRegister: () -> Unit = {},
-    onForgotPasswordClick: () -> Unit = {},
-    isLoading: Boolean = false,
-    errorMessage: String? = null
+    onForgotPasswordClick: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
+
+    val context = LocalContext.current
+    val uiState by authViewModel.uiState.collectAsState()
+
+    // React to login result
+    LaunchedEffect(uiState) {
+        when (val state = uiState) {
+            is AuthUiState.Success -> {
+                Toast.makeText(context, "Welcome back!", Toast.LENGTH_SHORT).show()
+                onLoginSuccess()
+                authViewModel.resetState()
+            }
+            is AuthUiState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
+            }
+            else -> {}
+        }
+    }
+
+    val isLoading = uiState is AuthUiState.Loading
 
     Box(
         modifier = Modifier
@@ -73,7 +95,6 @@ fun LoginScreen(
         ) {
             Spacer(modifier = Modifier.height(50.dp))
 
-            // App branding with real logo
             AnimatedVisibility(
                 visible = true,
                 enter = fadeIn() + slideInVertically(initialOffsetY = { -40 })
@@ -112,7 +133,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Floating card with form
             Card(
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
@@ -167,17 +187,6 @@ fun LoginScreen(
                         errorMessage = passwordError
                     )
 
-                    if (errorMessage != null) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = errorMessage,
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 13.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-
                     Spacer(modifier = Modifier.height(8.dp))
 
                     TextButton(
@@ -207,7 +216,7 @@ fun LoginScreen(
                                 hasError = true
                             }
                             if (!hasError) {
-                                onLoginClick(email, password)
+                                authViewModel.login(email, password)
                             }
                         }
                     )
@@ -236,13 +245,5 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
         }
-    }
-}
-
-@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    com.example.studycircle.ui.theme.StudyCircleTheme {
-        LoginScreen()
     }
 }
