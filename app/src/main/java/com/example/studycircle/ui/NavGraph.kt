@@ -17,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.studycircle.ui.auth.AuthViewModel
 import com.example.studycircle.ui.auth.LoginScreen
 import com.example.studycircle.ui.auth.RegisterScreen
+import com.example.studycircle.ui.feed.FeedScreen
 
 // Screen route constants
 object Routes {
@@ -68,26 +69,11 @@ fun NavGraph(
         }
 
         // Home Screen placeholder
+        // With this:
         composable(Routes.HOME) {
-            HomePlaceholder()
+            FeedScreen(
+                userName = "Student"
+            )
         }
-    }
-}
-
-// Temporary placeholder until we build the real Home screen
-@Composable
-fun HomePlaceholder() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "🎉 Welcome to StudyCircle!\nHome feed coming soon...",
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground
-        )
     }
 }
