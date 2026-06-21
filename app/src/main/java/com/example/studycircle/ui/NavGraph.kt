@@ -1,16 +1,9 @@
 package com.example.studycircle.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -30,6 +23,7 @@ import com.example.studycircle.ui.chat.ChatViewModel
 import com.example.studycircle.ui.components.BottomNavBar
 import com.example.studycircle.ui.feed.CreatePostScreen
 import com.example.studycircle.ui.feed.FeedScreen
+import com.example.studycircle.ui.map.MapScreen
 import java.net.URLDecoder
 import java.net.URLEncoder
 
@@ -181,25 +175,8 @@ fun NavGraph(
 
             // Map Screen
             composable(Routes.MAP) {
-                MapPlaceholder()
+                MapScreen()
             }
         }
-    }
-}
-
-@Composable
-fun MapPlaceholder() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "🗺️ Nearby Students\nComing soon...",
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground
-        )
     }
 }
