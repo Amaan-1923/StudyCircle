@@ -13,17 +13,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.studycircle.domain.model.ChatRoom
 import com.example.studycircle.ui.ai.AiScreen
 import com.example.studycircle.ui.auth.AuthViewModel
 import com.example.studycircle.ui.auth.LoginScreen
 import com.example.studycircle.ui.auth.RegisterScreen
+import com.example.studycircle.ui.chat.ChatListScreen
+import com.example.studycircle.ui.chat.ChatRoomScreen
+import com.example.studycircle.ui.chat.ChatViewModel
 import com.example.studycircle.ui.components.BottomNavBar
 import com.example.studycircle.ui.feed.CreatePostScreen
 import com.example.studycircle.ui.feed.FeedScreen
+import java.net.URLDecoder
+import java.net.URLEncoder
 
 object Routes {
     const val LOGIN = "login"
@@ -32,10 +40,10 @@ object Routes {
     const val CREATE_POST = "create_post"
     const val AI_ASSISTANT = "ai_assistant"
     const val CHAT = "chat"
+    const val CHAT_ROOM = "chat_room/{roomId}/{roomName}/{roomEmoji}/{roomDescription}"
     const val MAP = "map"
 }
 
-// Routes that should show the bottom nav bar
 val bottomNavRoutes = listOf(
     Routes.HOME,
     Routes.AI_ASSISTANT,
@@ -122,33 +130,60 @@ fun NavGraph(
                 )
             }
 
-            // Chat Screen (placeholder)
+            // Chat List Screen
             composable(Routes.CHAT) {
-                ChatPlaceholder()
+                val chatViewModel: ChatViewModel = viewModel()
+                ChatListScreen(
+                    onRoomClick = { room ->
+                        val encodedName = URLEncoder.encode(room.name, "UTF-8")
+                        val encodedEmoji = URLEncoder.encode(room.emoji, "UTF-8")
+                        val encodedDesc = URLEncoder.encode(room.description, "UTF-8")
+                        navController.navigate(
+                            "chat_room/${room.id}/$encodedName/$encodedEmoji/$encodedDesc"
+                        )
+                    },
+                    viewModel = chatViewModel
+                )
             }
 
-            // Map Screen (placeholder)
+            // Chat Room Screen
+            composable(
+                route = Routes.CHAT_ROOM,
+                arguments = listOf(
+                    navArgument("roomId") { type = NavType.StringType },
+                    navArgument("roomName") { type = NavType.StringType },
+                    navArgument("roomEmoji") { type = NavType.StringType },
+                    navArgument("roomDescription") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val roomId = backStackEntry.arguments?.getString("roomId") ?: ""
+                val roomName = URLDecoder.decode(
+                    backStackEntry.arguments?.getString("roomName") ?: "", "UTF-8"
+                )
+                val roomEmoji = URLDecoder.decode(
+                    backStackEntry.arguments?.getString("roomEmoji") ?: "💬", "UTF-8"
+                )
+                val roomDescription = URLDecoder.decode(
+                    backStackEntry.arguments?.getString("roomDescription") ?: "", "UTF-8"
+                )
+                val chatViewModel: ChatViewModel = viewModel()
+                ChatRoomScreen(
+                    room = ChatRoom(
+                        id = roomId,
+                        name = roomName,
+                        emoji = roomEmoji,
+                        description = roomDescription
+                    ),
+                    onBack = { navController.popBackStack() },
+                    viewModel = chatViewModel
+                )
+            }
+
+            // Map Screen
             composable(Routes.MAP) {
                 MapPlaceholder()
             }
         }
-    }
-}
-
-@Composable
-fun ChatPlaceholder() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "💬 Chat\nComing soon...",
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground
-        )
     }
 }
 
