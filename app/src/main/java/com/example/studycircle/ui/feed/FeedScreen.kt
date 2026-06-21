@@ -37,6 +37,7 @@ fun FeedScreen(
     onCreatePost: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
+    onAiAssistantClick: () -> Unit = {},
     viewModel: FeedViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()

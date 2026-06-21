@@ -58,4 +58,15 @@ class FeedViewModel(
             repository.likePost(postId)
         }
     }
+    fun createPost(post: Post, onSuccess: () -> Unit, onError: () -> Unit) {
+        viewModelScope.launch {
+            val success = repository.createPost(post)
+            if (success) onSuccess() else onError()
+        }
+    }
+
+
+
+
+
 }
