@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.studycircle.ui.feed.components.PostCard
+import com.example.studycircle.ui.feed.components.PostCardSkeleton
 import com.example.studycircle.ui.theme.GradientEnd
 import com.example.studycircle.ui.theme.GradientStart
 import com.example.studycircle.ui.theme.TextSecondary
@@ -68,6 +69,7 @@ fun FeedScreen(
             item {
                 FeedHeader(
                     userName = userName,
+                    userPostCount = uiState.userPostCount,
                     onNotificationsClick = onNotificationsClick,
                     onProfileClick = onProfileClick
                 )
@@ -82,19 +84,10 @@ fun FeedScreen(
                 )
             }
 
-            // Loading state
+            // Skeleton loading
             if (uiState.isLoading) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(48.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                items(4) {
+                    PostCardSkeleton()
                 }
             }
 
@@ -124,6 +117,7 @@ fun FeedScreen(
 @Composable
 private fun FeedHeader(
     userName: String,
+    userPostCount: Int = 0,
     onNotificationsClick: () -> Unit,
     onProfileClick: () -> Unit
 ) {
@@ -160,7 +154,6 @@ private fun FeedHeader(
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Notification icon
                     IconButton(
                         onClick = onNotificationsClick,
                         modifier = Modifier
@@ -176,7 +169,6 @@ private fun FeedHeader(
                         )
                     }
 
-                    // Profile icon
                     IconButton(
                         onClick = onProfileClick,
                         modifier = Modifier
@@ -196,16 +188,16 @@ private fun FeedHeader(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Stats row
+            // Real stats row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                StatItem(value = "12", label = "Posts")
+                StatItem(value = "$userPostCount", label = "Posts")
                 StatDivider()
-                StatItem(value = "5", label = "Groups")
+                StatItem(value = "—", label = "Groups")
                 StatDivider()
-                StatItem(value = "48", label = "Connections")
+                StatItem(value = "—", label = "Connections")
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -259,7 +251,8 @@ private fun SubjectFilterRow(
                     Text(
                         text = subject,
                         fontSize = 13.sp,
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                        fontWeight = if (isSelected) FontWeight.SemiBold
+                        else FontWeight.Normal
                     )
                 },
                 colors = FilterChipDefaults.filterChipColors(

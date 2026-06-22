@@ -1,5 +1,7 @@
 package com.example.studycircle.ui
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -24,10 +26,14 @@ import com.example.studycircle.ui.components.BottomNavBar
 import com.example.studycircle.ui.feed.CreatePostScreen
 import com.example.studycircle.ui.feed.FeedScreen
 import com.example.studycircle.ui.map.MapScreen
+import com.example.studycircle.ui.splash.SplashScreen
+import com.example.studycircle.ui.stats.StatsScreen
+import com.google.firebase.auth.FirebaseAuth
 import java.net.URLDecoder
 import java.net.URLEncoder
 
 object Routes {
+    const val SPLASH = "splash"
     const val LOGIN = "login"
     const val REGISTER = "register"
     const val HOME = "home"
@@ -36,6 +42,7 @@ object Routes {
     const val CHAT = "chat"
     const val CHAT_ROOM = "chat_room/{roomId}/{roomName}/{roomEmoji}/{roomDescription}"
     const val MAP = "map"
+    const val STATS = "stats"
 }
 
 val bottomNavRoutes = listOf(
@@ -50,7 +57,6 @@ fun NavGraph(
     navController: NavHostController = rememberNavController(),
     authViewModel: AuthViewModel = viewModel()
 ) {
-    val startDestination = if (authViewModel.isLoggedIn()) Routes.HOME else Routes.LOGIN
     val navBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry.value?.destination?.route
 
@@ -63,9 +69,54 @@ fun NavGraph(
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = startDestination,
-            modifier = Modifier.padding(innerPadding)
+            startDestination = Routes.SPLASH,
+            modifier = Modifier.padding(innerPadding),
+            enterTransition = {
+                fadeIn(animationSpec = tween(300)) +
+                        slideIntoContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                            animationSpec = tween(300)
+                        )
+            },
+            exitTransition = {
+                fadeOut(animationSpec = tween(300)) +
+                        slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                            animationSpec = tween(300)
+                        )
+            },
+            popEnterTransition = {
+                fadeIn(animationSpec = tween(300)) +
+                        slideIntoContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.End,
+                            animationSpec = tween(300)
+                        )
+            },
+            popExitTransition = {
+                fadeOut(animationSpec = tween(300)) +
+                        slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.End,
+                            animationSpec = tween(300)
+                        )
+            }
         ) {
+            // Splash Screen
+            composable(
+                route = Routes.SPLASH,
+                enterTransition = { fadeIn(animationSpec = tween(500)) },
+                exitTransition = { fadeOut(animationSpec = tween(500)) }
+            ) {
+                SplashScreen(
+                    onSplashFinished = {
+                        val destination = if (authViewModel.isLoggedIn())
+                            Routes.HOME else Routes.LOGIN
+                        navController.navigate(destination) {
+                            popUpTo(Routes.SPLASH) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
             // Login Screen
             composable(Routes.LOGIN) {
                 LoginScreen(
@@ -98,13 +149,21 @@ fun NavGraph(
 
             // Home / Feed Screen
             composable(Routes.HOME) {
+                val currentUser = FirebaseAuth.getInstance().currentUser
+                val userName = currentUser?.displayName
+                    ?: currentUser?.email?.substringBefore("@")
+                    ?: "Student"
+
                 FeedScreen(
-                    userName = "Student",
+                    userName = userName,
                     onCreatePost = {
                         navController.navigate(Routes.CREATE_POST)
                     },
                     onAiAssistantClick = {
                         navController.navigate(Routes.AI_ASSISTANT)
+                    },
+                    onProfileClick = {
+                        navController.navigate(Routes.STATS)
                     }
                 )
             }
@@ -176,6 +235,13 @@ fun NavGraph(
             // Map Screen
             composable(Routes.MAP) {
                 MapScreen()
+            }
+
+            // Stats Screen
+            composable(Routes.STATS) {
+                StatsScreen(
+                    onBack = { navController.popBackStack() }
+                )
             }
         }
     }

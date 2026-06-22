@@ -2,6 +2,7 @@ package com.example.studycircle.data.repository
 
 import com.example.studycircle.domain.model.User
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -20,7 +21,6 @@ class AuthRepository(
             val result = auth.signInWithEmailAndPassword(email, password).await()
             val firebaseUser = result.user ?: return AuthResult.Error("Login failed. Try again.")
 
-            // Fetch user profile from Firestore
             val doc = firestore.collection("users").document(firebaseUser.uid).get().await()
             val user = if (doc.exists()) {
                 doc.toObject(User::class.java) ?: User(uid = firebaseUser.uid, email = email)
@@ -39,13 +39,18 @@ class AuthRepository(
             val result = auth.createUserWithEmailAndPassword(email, password).await()
             val firebaseUser = result.user ?: return AuthResult.Error("Registration failed. Try again.")
 
+            // Save display name to Firebase Auth
+            val profileUpdates = userProfileChangeRequest {
+                displayName = name
+            }
+            firebaseUser.updateProfile(profileUpdates).await()
+
             val newUser = User(
                 uid = firebaseUser.uid,
                 name = name,
                 email = email
             )
 
-            // Save user profile to Firestore
             firestore.collection("users").document(firebaseUser.uid).set(newUser).await()
 
             AuthResult.Success(newUser)
@@ -60,6 +65,13 @@ class AuthRepository(
 
     fun getCurrentUserId(): String? {
         return auth.currentUser?.uid
+    }
+
+    fun getCurrentUserName(): String {
+        val user = auth.currentUser
+        return user?.displayName
+            ?: user?.email?.substringBefore("@")
+            ?: "Student"
     }
 
     fun isLoggedIn(): Boolean {
